@@ -13,6 +13,9 @@ i = 1
 
 with open("data/input.txt") as f:
     for line in f:
+        print(line.strip())
+        # print('----')
+        # print(line.strip())
         if line.strip() == '':
             deercal_dict[i] = cal
             cal = 0
