@@ -118,8 +118,6 @@ class Graph():
                 neighbours.append(self.nodes[node.pos_1D - shape[1]])
                 neighbours.append(self.nodes[node.pos_1D - 1])
                 neighbours.append(self.nodes[node.pos_1D + 1])
-
-
             else:
                 neighbours.append(self.nodes[node.pos_1D - shape[1]])
                 neighbours.append(self.nodes[node.pos_1D + 1])
@@ -140,6 +138,7 @@ class Node():
         self.is_source = False
         self.is_target = False
         self.visited = False
+        self.parent_node = None
 
 def pathfinder(graph, source_node, target_node):
     history = []
@@ -164,6 +163,28 @@ def pathfinder(graph, source_node, target_node):
     current_node.visited = True
     current_node = neighbour
     return history
+
+def breadth_first(G, root):
+    Q = []
+    hist = []
+    root.visited = True
+    Q.append(root)
+    while Q:
+        v = Q.pop(0)
+        if v.is_target:
+            hist.append(node)
+            return v
+        for node in v.neighbours:
+            if node.value > v.value + 1:
+                v.neighbours.remove(node)
+        for node in v.neighbours:
+            if not node.visited:
+                node.visited = True
+                node.parent_node = v
+                Q.append(node)
+                hist.append(node)
+
+
 
 def prep_data():
     data_folder = Path("data/")
@@ -202,14 +223,23 @@ if __name__ == '__main__':
         area.nodes.append(node)
     source_node = area.nodes[start]
     source_node.is_source = True
+    source_node.value = 1
     target_node = area.nodes[end]
     target_node.is_target = True
     target_node.value = 26
+    print(target_node.pos_1D)
+
 
     area.neighbour_search()
-    history = pathfinder(area, source_node, target_node)
+    # history = pathfinder(area, source_node, target_node)
+    breadth_first(area, source_node)
 
-
+    history = []
+    current_node = target_node
+    while not current_node.is_source:
+        history.append(current_node.parent_node)
+        current_node = current_node.parent_node
+    print('len: ', len(history))
 
     fig, ax = plt.subplots(figsize=(30,10))
     im = ax.imshow(heightmap)
@@ -226,3 +256,6 @@ if __name__ == '__main__':
         else:
             plt.annotate(f'{chr(p.value + 96)}', (p.pos2D_x, p.pos2D_y), fontsize=5)
     plt.show()
+
+#  104 too low
+#  105 too low
