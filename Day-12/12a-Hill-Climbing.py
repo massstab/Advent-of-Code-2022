@@ -23,7 +23,7 @@ class Graph():
         self.end_2d_x = int(end_1D % shape[1])
         self.end_2d_y = int(end_1D / shape[1])
 
-    def neighbour_search(self):
+    def neighbour_search_all(self):
         for node in self.nodes:
             neighbours = []
             rowU_exists = False
@@ -84,6 +84,47 @@ class Graph():
                 except IndexError as e:
                     print(f'LIVIN ON THE EDGE! Node ({node.pos2D_x}, {node.pos2D_y}): can not find a neighbour SE', e)
 
+
+            node.neighbours = neighbours
+
+    def neighbour_search(self):
+        for node in self.nodes:
+            neighbours = []
+            if node.pos2D_x == 0 and node.pos2D_y == 0:
+                neighbours.append(self.nodes[node.pos_1D + 1])
+                neighbours.append(self.nodes[node.pos_1D + shape[1]])
+            elif node.pos2D_x == shape[1] - 1 and node.pos2D_y == 0:
+                neighbours.append(self.nodes[node.pos_1D - 1])
+                neighbours.append(self.nodes[node.pos_1D + shape[1]])
+            elif node.pos2D_x == 0 and node.pos2D_y == shape[0] - 1:
+                neighbours.append(self.nodes[node.pos_1D + 1])
+                neighbours.append(self.nodes[node.pos_1D - shape[1]])
+            elif node.pos2D_x == shape[1] - 1 and node.pos2D_y == shape[0] - 1:
+                neighbours.append(self.nodes[node.pos_1D - 1])
+                neighbours.append(self.nodes[node.pos_1D - shape[1]])
+            elif node.pos2D_x == 0:
+                neighbours.append(self.nodes[node.pos_1D + 1])
+                neighbours.append(self.nodes[node.pos_1D - shape[1]])
+                neighbours.append(self.nodes[node.pos_1D + shape[1]])
+            elif node.pos2D_x == shape[1] - 1:
+                neighbours.append(self.nodes[node.pos_1D - 1])
+                neighbours.append(self.nodes[node.pos_1D - shape[1]])
+                neighbours.append(self.nodes[node.pos_1D + shape[1]])
+            elif node.pos2D_y == 0:
+                neighbours.append(self.nodes[node.pos_1D + shape[1]])
+                neighbours.append(self.nodes[node.pos_1D - 1])
+                neighbours.append(self.nodes[node.pos_1D + 1])
+            elif node.pos2D_y == shape[0] - 1:
+                neighbours.append(self.nodes[node.pos_1D - shape[1]])
+                neighbours.append(self.nodes[node.pos_1D - 1])
+                neighbours.append(self.nodes[node.pos_1D + 1])
+
+
+            else:
+                neighbours.append(self.nodes[node.pos_1D - shape[1]])
+                neighbours.append(self.nodes[node.pos_1D + 1])
+                neighbours.append(self.nodes[node.pos_1D + shape[1]])
+                neighbours.append(self.nodes[node.pos_1D - 1])
             node.neighbours = neighbours
 
 
@@ -98,21 +139,35 @@ class Node():
         self.pos2D_y = int(idx_1D / shape[1])  # Column
         self.is_source = False
         self.is_target = False
+        self.visited = False
 
-def dijkstra(graph, source_node):
+def pathfinder(graph, source_node, target_node):
     history = []
-    queue = graph.nodes
-    for i in range(len(graph.nodes)):
-        pass
-        # print(i)
-        # print(graph.nodes[i].is_target)
-    # while queue:
-    #     pass
+    current_node = source_node
 
+    steps = 0
+    while not current_node.is_target:
+        steps += 1
+
+        # sorted_neighbours = sorted(current_node.neighbours, key=lambda x: np.sqrt((x.pos2D_x - target_node.pos2D_x)**2 + (x.pos2D_y - target_node.pos2D_y)**2), reverse=False)
+        sorted_neighbours = sorted(current_node.neighbours, key=lambda x: x.value, reverse=True)
+        for neighbour in list(sorted_neighbours):
+            if (neighbour.value <= current_node.value + 1) and (not neighbour.visited):
+                history.append(current_node)
+                current_node.visited = True
+                current_node = neighbour
+                break
+        if steps > shape[0] * shape[1]:
+            print('Too many steps...: ', steps)
+            break
+    history.append(current_node)
+    current_node.visited = True
+    current_node = neighbour
+    return history
 
 def prep_data():
     data_folder = Path("data/")
-    puzzle_input = data_folder / "input_test.txt"
+    puzzle_input = data_folder / "input.txt"
 
     input_list = []
 
@@ -145,24 +200,29 @@ if __name__ == '__main__':
     for loc, val in enumerate(heightmap_flat):
         node = Node(loc, val, shape)
         area.nodes.append(node)
-        if loc == start:
-            node.is_source = True
-        if loc == end:
-            node.is_target = True
+    source_node = area.nodes[start]
+    source_node.is_source = True
+    target_node = area.nodes[end]
+    target_node.is_target = True
+    target_node.value = 26
+
     area.neighbour_search()
-    dijkstra(area, shape)
+    history = pathfinder(area, source_node, target_node)
 
 
 
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(30,10))
     im = ax.imshow(heightmap)
-    for p in area.nodes[:]:
-        plt.arrow(p.pos2D_x, p.pos2D_y, .3, 0, width=.05)
+    arrow_length = 0.4
+    for i, p in enumerate(history):
+        if i != len(history) - 1:
+            p_next = history[i+1]
+        plt.arrow(p.pos2D_x, p.pos2D_y, arrow_length * (p_next.pos2D_x - p.pos2D_x), arrow_length * (p_next.pos2D_y - p.pos2D_y), width=.04)
     for p in area.nodes:
-        if p.value == 0:
+        if p.is_source:
             plt.annotate('Start', (p.pos2D_x, p.pos2D_y))
-        elif p.value == 27:
+        elif p.is_target:
             plt.annotate('Target', (p.pos2D_x, p.pos2D_y))
         else:
-            plt.annotate(f'{chr(p.value + 96)}', (p.pos2D_x, p.pos2D_y))
+            plt.annotate(f'{chr(p.value + 96)}', (p.pos2D_x, p.pos2D_y), fontsize=5)
     plt.show()
