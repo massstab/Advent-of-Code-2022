@@ -4,7 +4,7 @@
 """Name:      massstab
    Date:      07.12.22
    Kurs:      Advent of Code
-   Topic:     Hill Climbing Algorithm b
+   Topic:     Hill Climbing Algorithm a
 """
 
 import numpy as np
@@ -125,6 +125,16 @@ class Graph():
                 neighbours.append(self.nodes[node.pos_1D - 1])
             node.neighbours = neighbours
 
+        for node in self.nodes:
+            remove_nodes = []
+            for i, neighbour in enumerate(node.neighbours):
+                neighbourvalue = neighbour.value
+                nodevalue = node.value + 1
+                if neighbourvalue > nodevalue:
+                    remove_nodes.append(neighbour)
+            for j in remove_nodes:
+                node.neighbours.remove(j)
+
 
 class Node():
     def __init__(self, idx_1D, value, shape):
@@ -166,23 +176,17 @@ def pathfinder(graph, source_node, target_node):
 
 def breadth_first(G, root):
     Q = []
-    hist = []
     root.visited = True
     Q.append(root)
     while Q:
         v = Q.pop(0)
         if v.is_target:
-            hist.append(node)
             return v
-        for node in v.neighbours:
-            if node.value > v.value + 1:
-                v.neighbours.remove(node)
         for node in v.neighbours:
             if not node.visited:
                 node.visited = True
                 node.parent_node = v
                 Q.append(node)
-                hist.append(node)
 
 
 
@@ -241,9 +245,11 @@ if __name__ == '__main__':
         current_node = current_node.parent_node
     print('len: ', len(history))
 
-    fig, ax = plt.subplots(figsize=(30,10))
+    fig, ax = plt.subplots(figsize=(20,20), dpi=150)
+    plt.tight_layout()
     im = ax.imshow(heightmap)
     arrow_length = 0.4
+    history = list(reversed(history))
     for i, p in enumerate(history):
         if i != len(history) - 1:
             p_next = history[i+1]
@@ -254,7 +260,7 @@ if __name__ == '__main__':
         elif p.is_target:
             plt.annotate('Target', (p.pos2D_x, p.pos2D_y))
         else:
-            plt.annotate(f'{chr(p.value + 96)}', (p.pos2D_x, p.pos2D_y), fontsize=5)
+            plt.annotate(f'{chr(p.value + 96)} {p.value}', (p.pos2D_x, p.pos2D_y), fontsize = 4)
     plt.show()
 
 #  104 too low
