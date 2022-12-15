@@ -225,6 +225,7 @@ if __name__ == '__main__':
     for loc, val in enumerate(heightmap_flat):
         node = Node(loc, val, shape)
         area.nodes.append(node)
+    print(start)
     source_node = area.nodes[start]
     source_node.is_source = True
     source_node.value = 1
@@ -262,6 +263,8 @@ if __name__ == '__main__':
         else:
             plt.annotate(f'{chr(p.value + 96)} {p.value}', (p.pos2D_x, p.pos2D_y), fontsize = 4)
     plt.show()
+
+    print(len(history))
 
 #  104 too low
 #  105 too low

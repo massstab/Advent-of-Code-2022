@@ -51,7 +51,7 @@ class Graph():
             if rowU_exists:
                 idx = node.pos2D_x - 1
                 if idx >= 0:
-                   neighbours.append(self.nodes[node.pos_1D - shape[1] - 1])
+                    neighbours.append(self.nodes[node.pos_1D - shape[1] - 1])
                 neighbours.append(self.nodes[node.pos_1D - shape[1]])
                 try:
                     idx = node.pos2D_x + 1
@@ -83,7 +83,6 @@ class Graph():
                     neighbours.append(self.nodes[node.pos_1D + shape[1] + 1])
                 except IndexError as e:
                     print(f'LIVIN ON THE EDGE! Node ({node.pos2D_x}, {node.pos2D_y}): can not find a neighbour SE', e)
-
 
             node.neighbours = neighbours
 
@@ -129,8 +128,8 @@ class Graph():
             remove_nodes = []
             for i, neighbour in enumerate(node.neighbours):
                 neighbourvalue = neighbour.value
-                nodevalue = node.value + 1
-                if neighbourvalue > nodevalue:
+                nodevalue = node.value - 1
+                if neighbourvalue < nodevalue:
                     remove_nodes.append(neighbour)
             for j in remove_nodes:
                 node.neighbours.remove(j)
@@ -149,6 +148,7 @@ class Node():
         self.is_target = False
         self.visited = False
         self.parent_node = None
+
 
 def pathfinder(graph, source_node, target_node):
     history = []
@@ -174,20 +174,20 @@ def pathfinder(graph, source_node, target_node):
     current_node = neighbour
     return history
 
+
 def breadth_first(G, root):
     Q = []
     root.visited = True
     Q.append(root)
     while Q:
         v = Q.pop(0)
-        if v.is_target:
+        if v.value == 1:
             return v
         for node in v.neighbours:
             if not node.visited:
                 node.visited = True
                 node.parent_node = v
                 Q.append(node)
-
 
 
 def prep_data():
@@ -207,7 +207,7 @@ def prep_data():
         convert = [ord(c) - 96 for c in chars]
         if -13 in convert:
             idx_S = convert.index(-13)
-            convert[idx_S] = 0
+            convert[idx_S] = 1
         if -27 in convert:
             idx_E = convert.index(-27)
             convert[idx_E] = 27
@@ -215,53 +215,54 @@ def prep_data():
         for i in convert:
             heightmap_flat.append(i)
     heightmap = np.array(heightmap)
-    return heightmap, heightmap_flat, heightmap_flat.index(0), heightmap_flat.index(27)
+    end_idx = heightmap_flat.index(27)
+    print('End idx: ', end_idx)
+    return heightmap, heightmap_flat, end_idx
+
 
 if __name__ == '__main__':
-    heightmap, heightmap_flat, start, end = prep_data()
+    heightmap, heightmap_flat, end = prep_data()
     shape = heightmap.shape
-    print(heightmap.shape)
-    area = Graph(heightmap, start, end, shape)
-    for loc, val in enumerate(heightmap_flat):
-        node = Node(loc, val, shape)
+    area = Graph(heightmap, 0, end, shape)
+    for m, n in enumerate(heightmap_flat):
+        node = Node(m, n, shape)
         area.nodes.append(node)
-    source_node = area.nodes[start]
-    source_node.is_source = True
-    source_node.value = 1
-    target_node = area.nodes[end]
-    target_node.is_target = True
-    target_node.value = 26
-    print(target_node.pos_1D)
-
-
+    heightmap_flat[end] = 26
+    target = area.nodes[end]
+    target.value == 26
     area.neighbour_search()
-    # history = pathfinder(area, source_node, target_node)
-    breadth_first(area, source_node)
+    start = breadth_first(area, target)
 
     history = []
-    current_node = target_node
-    while not current_node.is_source:
+    current_node = start
+    while current_node:
         history.append(current_node.parent_node)
         current_node = current_node.parent_node
-    print('len: ', len(history))
 
-    fig, ax = plt.subplots(figsize=(20,20), dpi=150)
+    history = list(reversed(history))
+    print(len(history)-1)
+    fig, ax = plt.subplots(figsize=(20, 20), dpi=150)
     plt.tight_layout()
     im = ax.imshow(heightmap)
+    ax.set_xticks(np.arange(shape[1] + 1) - .5, minor=True)
+    ax.set_yticks(np.arange(shape[0] + 1) - .5, minor=True)
+    ax.grid(which="minor", color="w", linestyle='-', linewidth=.2)
     arrow_length = 0.4
-    history = list(reversed(history))
-    for i, p in enumerate(history):
+    for i, p in enumerate(history[1:]):
         if i != len(history) - 1:
-            p_next = history[i+1]
-        plt.arrow(p.pos2D_x, p.pos2D_y, arrow_length * (p_next.pos2D_x - p.pos2D_x), arrow_length * (p_next.pos2D_y - p.pos2D_y), width=.04)
+            p_next = history[i + 1]
+        plt.arrow(p.pos2D_x - .1, p.pos2D_y + 0.2, arrow_length * (p_next.pos2D_x - p.pos2D_x),
+                  arrow_length * (p_next.pos2D_y - p.pos2D_y), width=.04)
     for p in area.nodes:
         if p.is_source:
-            plt.annotate('Start', (p.pos2D_x, p.pos2D_y))
+            plt.annotate(f'S, {p.value}', (p.pos2D_x - 0.4, p.pos2D_y - 0.2), fontsize=4, c='r')
         elif p.is_target:
-            plt.annotate('Target', (p.pos2D_x, p.pos2D_y))
+            plt.annotate(f'E, {p.value}', (p.pos2D_x - 0.4, p.pos2D_y - 0.2), fontsize=4)
         else:
-            plt.annotate(f'{chr(p.value + 96)} {p.value}', (p.pos2D_x, p.pos2D_y), fontsize = 4)
+            plt.annotate(f'{chr(p.value + 96)} {p.value}', (p.pos2D_x, p.pos2D_y), fontsize=4)
     plt.show()
+    plt.close()
 
-#  104 too low
-#  105 too low
+    # 377 too high
+    # 376 too high
+    # 375 right!
