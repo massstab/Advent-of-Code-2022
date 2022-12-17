@@ -10,6 +10,8 @@
 import networkx as nx
 from copy import copy
 import matplotlib.pylab as plt
+import time
+t1 = time.time()
 
 def generate_open_options(pos, open_valves, time_left):
     """
@@ -26,9 +28,57 @@ def generate_open_options(pos, open_valves, time_left):
     yield copy(open_valves)
 
 
-input_dict = {}
+def open_valves(flat_paths):
+    total_release = {}
+    for i, path in enumerate(flat_paths):
+        t = 0
+        pressure = 0
+        for node in non_zero:
+            G.nodes[node]['visited'] = False
+        current_valve = 'AA'
+        for valve in path:
+            if t <= 26 and not G.nodes[valve]['visited']:
+                travel_time = distances[current_valve][valve]
+                t += travel_time
+                current_valve = valve
+                G.nodes[valve]['visited'] = True
+                t += 1
+                flow = G.nodes[valve]['flow_rate']
+                timeleft = 30 - t
+                pressure += flow * timeleft
+        total_release[i] = pressure
+    return total_release
 
-with open("data/input_test.txt") as f:
+def open_valves_human_elephant(best_human_path, best_elephant_path):
+    t_human = 0
+    t_elephant = 0
+    pressure = 0
+    for node in non_zero:
+        G.nodes[node]['visited'] = False
+    current_valve_human = 'AA'
+    current_valve_elephant = 'AA'
+    for valve_human, valve_elephant in zip(best_human_path, best_elephant_path):
+        if t_human <= 26:
+            travel_time_human = distances[current_valve_human][valve_human]
+            travel_time_elephant = distances[current_valve_elephant][valve_elephant]
+            t_human += travel_time_human
+            t_elephant += travel_time_elephant
+            current_valve_human = valve_human
+            current_valve_elephant = valve_elephant
+            G.nodes[valve_human]['visited'] = True
+            G.nodes[valve_elephant]['visited'] = True
+            t_human += 1
+            t_elephant += 1
+            flow_valve_human = G.nodes[valve_human]['flow_rate']
+            flow_valve_elephant = G.nodes[valve_elephant]['flow_rate']
+            timeleft_human = 26 - t_human
+            timeleft_elepahnt = 26 - t_elephant
+            pressure += flow_valve_human * timeleft_human
+            pressure += flow_valve_elephant * timeleft_elepahnt
+    return pressure
+
+input_dict = {}
+with open("data/input.txt") as f:
     for line in f:
         split = line.split()
         split_clean = []
@@ -38,6 +88,7 @@ with open("data/input_test.txt") as f:
             split_clean.append(rmv)
         input_dict[split[1]] = split_clean[9:]
         input_dict[split[1]].insert(0, int(split_clean[4][5:]))
+
 
 G = nx.Graph()
 
@@ -57,34 +108,47 @@ for i in G.nodes:
         non_zero.append(i)
 print('None Zero Nodes: ', non_zero)
 
-paths_flat = generate_open_options('AA', [], 30)
+t1 = time.time()
+
+paths_flat = generate_open_options('AA', [], 26)
 paths_flat = list(paths_flat)
 
-pressure_release = {}
-for i, path in enumerate(paths_flat):
-    t = 0
-    pressure = 0
-    for node in non_zero:
-        G.nodes[node]['visited'] = False
-    current_valve = 'AA'
-    for valve in path:
-        if t <= 30 and not G.nodes[valve]['visited']:
-            travel_time = distances[current_valve][valve]
-            t += travel_time
-            current_valve = valve
-            G.nodes[valve]['visited'] = True
-            t += 1
-            flow = G.nodes[valve]['flow_rate']
-            timeleft = 30 - t
-            pressure += flow * timeleft
-    pressure_release[i] = pressure
+pressure_release = open_valves(paths_flat)
 
-maximum = max(pressure_release, key=pressure_release.get)
-# print(paths_flat)
-print(maximum, pressure_release[maximum])
-print('Best path (without zero flows): ', paths_flat[maximum])
+sorted_paths = []
+for k, v in sorted(pressure_release.items(), key=lambda item: item[1]):
+    tup = (k, v)
+    sorted_paths.append(tup)
+sorted_paths = list(reversed(sorted_paths))
 
+paths_short = []
+paths_short_tupel =[]
 
-plt.figure(figsize=(8, 5))
-nx.draw(G, with_labels=True)
-plt.show()
+for q, p in enumerate(sorted_paths):
+    path = sorted(paths_flat[sorted_paths[q][0]])
+    if not path in paths_short:
+        paths_short.append(path)
+        paths_short_tupel.append((p))
+
+score_added = []
+score = 0
+for path_human in paths_short_tupel:
+    for path_elephant in paths_short_tupel[1:]:
+        human = paths_flat[path_human[0]]
+        elephant = paths_flat[path_elephant[0]]
+        if len(set(human).intersection(elephant)) == 0:
+            score_added.append([path_human[1] + path_elephant[1], human, path_human[0],
+                               elephant, path_elephant[0]])
+            score = max(score, path_human[1] + path_elephant[1])
+
+best_paths_human = max(score_added)[1]
+best_paths_elephant = max(score_added)[3]
+
+result_release = open_valves_human_elephant(best_paths_human, best_paths_elephant)
+
+print('Result: ', result_release)
+print(f'Everything took: {time.time() - t1}s')
+
+# 'JJ', 'BB', 'CC'
+# 'DD', 'HH', 'EE'
+
