@@ -1,0 +1,90 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""Name:      massstab
+   Date:      16.12.22
+   Kurs:      Advent of Code
+   Topic:     Proboscidea Volcanium b
+"""
+
+import networkx as nx
+from copy import copy
+import matplotlib.pylab as plt
+
+def generate_open_options(pos, open_valves, time_left):
+    """
+    From normie101 from reddit aoc
+    """
+    for next in non_zero:
+        if next not in open_valves and distances[pos][next] < time_left:
+            open_valves.append(next)
+            yield from generate_open_options(
+                next, open_valves, time_left - distances[pos][next] - 1
+            )
+            open_valves.pop()
+
+    yield copy(open_valves)
+
+
+input_dict = {}
+
+with open("data/input_test.txt") as f:
+    for line in f:
+        split = line.split()
+        split_clean = []
+        for s in split:
+            rmv = s.replace(',', '')
+            rmv = rmv.replace(';', '')
+            split_clean.append(rmv)
+        input_dict[split[1]] = split_clean[9:]
+        input_dict[split[1]].insert(0, int(split_clean[4][5:]))
+
+G = nx.Graph()
+
+for valve in input_dict:
+    G.add_node(valve, flow_rate=input_dict[valve][0])
+    G.nodes[valve]['visited'] = False
+
+for u in list(G.nodes):
+    for v in input_dict[u][1:]:
+        G.add_edge(u, v, weight=1)
+
+distances = nx.floyd_warshall(G)
+
+non_zero = []
+for i in G.nodes:
+    if G.nodes[i]['flow_rate'] > 0:
+        non_zero.append(i)
+print('None Zero Nodes: ', non_zero)
+
+paths_flat = generate_open_options('AA', [], 30)
+paths_flat = list(paths_flat)
+
+pressure_release = {}
+for i, path in enumerate(paths_flat):
+    t = 0
+    pressure = 0
+    for node in non_zero:
+        G.nodes[node]['visited'] = False
+    current_valve = 'AA'
+    for valve in path:
+        if t <= 30 and not G.nodes[valve]['visited']:
+            travel_time = distances[current_valve][valve]
+            t += travel_time
+            current_valve = valve
+            G.nodes[valve]['visited'] = True
+            t += 1
+            flow = G.nodes[valve]['flow_rate']
+            timeleft = 30 - t
+            pressure += flow * timeleft
+    pressure_release[i] = pressure
+
+maximum = max(pressure_release, key=pressure_release.get)
+# print(paths_flat)
+print(maximum, pressure_release[maximum])
+print('Best path (without zero flows): ', paths_flat[maximum])
+
+
+plt.figure(figsize=(8, 5))
+nx.draw(G, with_labels=True)
+plt.show()
