@@ -21,11 +21,12 @@ def treebuild(dir, command):
     if dir.is_leaf:
         return
     if re.match('\$ cd \w+', command):  # Matches $ cd blabli
-        newdir = Directory()
-        newdir.name = str(re.findall('[^$ cd ]', command))
-        print(newdir.name)
-        newdir.path = dir.path + newdir.name
         print(command)
+        newdir = Directory()
+        newdirname = re.split('[^.]{5}', command)
+        newdir.name = newdirname[1]
+        newdir.path = dir.path + newdir.name
+        dir.directories.append(newdir)
     elif re.match('\$ cd \.\.', command):  # Matches $ cd ..
         print(command)
     elif re.match('\$ cd /', command):  # Matches $ cd /
@@ -44,6 +45,7 @@ class file:
 class Directory:
     def __init__(self, is_root=False):
         self.files = []
+        self.directories = []
         self.is_leaf = None
         self.is_root = None
         self.path = '/'
@@ -57,6 +59,6 @@ for i in input_list:
     if re.match('\$.+', i):
         treebuild(root_dir, command=i)
     elif re.match('dir.+', i):
-        print('dir: ', i)
+        treebuild(root_dir, command=i)
     else:
         print('file: ', i)

@@ -29,6 +29,9 @@ def generate_open_options(pos, open_valves, time_left):
 
 
 def open_valves(flat_paths):
+    """
+    This function is only to have a score on the different paths.
+    """
     total_release = {}
     for i, path in enumerate(flat_paths):
         t = 0
@@ -148,6 +151,7 @@ result_release = open_valves_human_elephant(best_paths_human, best_paths_elephan
 
 print('Result: ', result_release)
 print(f'Everything took: {time.time() - t1}s')
+print(len(paths_short))
 
 # 'JJ', 'BB', 'CC'
 # 'DD', 'HH', 'EE'
