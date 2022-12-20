@@ -1,0 +1,106 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""Name:      massstab
+   Date:      18.12.22
+   Kurs:      Advent of Code
+   Topic:     Boiling Boulders a
+"""
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+import numpy as np
+
+
+input = []
+
+with open("data/input.txt") as f:
+    for line in f:
+        splitted = line.strip()
+        splitted = splitted.split(',')
+        splitted = list(map(int, splitted))
+        input.append(splitted)
+
+total_area = len(input) * 6
+
+# a
+for i in input:
+    for j in input:
+        if i != j:
+            dist = 0
+            for k, l in enumerate(i):
+                diff = abs(l - j[k])
+                dist += diff
+            if dist == 1:
+                total_area -= 1
+
+# b
+diffsx_to_all = []
+diffsy_to_all = []
+diffsz_to_all = []
+for i in input:
+    diffsx = []
+    diffsy = []
+    diffsz = []
+    for j in input:
+        if i != j:
+            if i[1] == j[1] and i[2] == j[2]:
+                diffx = i[0] - j[0]
+                diffsx.append(diffx)
+            if i[0] == j[0] and i[2] == j[2]:
+                diffy = i[1] - j[1]
+                diffsy.append(diffy)
+            if i[0] == j[0] and i[1] == j[1]:
+                diffz = i[2] - j[2]
+                diffsz.append(diffz)
+    diffsx_to_all.append(list(diffsx))
+    diffsy_to_all.append(list(diffsy))
+    diffsz_to_all.append(list(diffsz))
+
+diffsx_to_all = np.array(diffsx_to_all, dtype=object)
+diffsy_to_all = np.array(diffsy_to_all, dtype=object)
+diffsz_to_all = np.array(diffsz_to_all, dtype=object)
+
+aussenteilchen = []
+count = 0
+for a, b, c in zip(diffsx_to_all, diffsy_to_all, diffsz_to_all):
+    if a != []:
+        a = np.array(a)
+        if all(a < 0) or all(a > 0):
+            teilchen = input[count]
+            if teilchen not in aussenteilchen:
+                aussenteilchen.append(teilchen)
+    if b != []:
+        b = np.array(b)
+        if all(b < 0) or all(b > 0):
+            teilchen = input[count]
+            if teilchen not in aussenteilchen:
+                aussenteilchen.append(teilchen)
+    if c != []:
+        c = np.array(c)
+        if all(c < 0) or all(c > 0):
+            teilchen = input[count]
+            if teilchen not in aussenteilchen:
+                aussenteilchen.append(teilchen)
+    count += 1
+
+total_areab = len(aussenteilchen) * 6
+for i in aussenteilchen:
+    for j in input:
+        if i != j:
+            dist = 0
+            for k, l in enumerate(i):
+                diff = abs(l - j[k])
+                dist += diff
+            if dist == 1:
+                total_areab -= 1
+
+print(total_areab)
+
+# Berechne Abstände in alle Richtungen x ,y, z.
+# Falls min. 1 Abstand inf. ist -> Teilchen ist aussen
+# setze alle Aussenteilchen in eine Liste
+# Berechne wie in a) die Anzahl Aussenseiten von jedem Teilchen in dieser Liste
+
+# Too low: 1980
+# Too low: 2509
+# Too low: 2512
