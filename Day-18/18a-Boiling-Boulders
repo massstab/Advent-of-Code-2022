@@ -13,25 +13,27 @@ import numpy as np
 
 input = []
 
-with open("data/input.txt") as f:
+with open("data/input_test.txt") as f:
     for line in f:
         splitted = line.strip()
         splitted = splitted.split(',')
         splitted = list(map(int, splitted))
         input.append(splitted)
 
+
+
 total_area = len(input) * 6
 
 # a
-for i in input:
-    for j in input:
-        if i != j:
-            dist = 0
-            for k, l in enumerate(i):
-                diff = abs(l - j[k])
-                dist += diff
-            if dist == 1:
-                total_area -= 1
+# for i in input:
+#     for j in input:
+#         if i != j:
+#             dist = 0
+#             for k, l in enumerate(i):
+#                 diff = abs(l - j[k])
+#                 dist += diff
+#             if dist == 1:
+#                 total_area -= 1
 
 # b
 diffsx_to_all = []
@@ -52,49 +54,98 @@ for i in input:
             if i[0] == j[0] and i[1] == j[1]:
                 diffz = i[2] - j[2]
                 diffsz.append(diffz)
-    diffsx_to_all.append(list(diffsx))
-    diffsy_to_all.append(list(diffsy))
-    diffsz_to_all.append(list(diffsz))
+    diffsx_to_all.append(diffsx)
+    diffsy_to_all.append(diffsy)
+    diffsz_to_all.append(diffsz)
 
 diffsx_to_all = np.array(diffsx_to_all, dtype=object)
 diffsy_to_all = np.array(diffsy_to_all, dtype=object)
 diffsz_to_all = np.array(diffsz_to_all, dtype=object)
 
+innenseiten = 0
 aussenteilchen = []
 count = 0
 for a, b, c in zip(diffsx_to_all, diffsy_to_all, diffsz_to_all):
-    if a != []:
-        a = np.array(a)
-        if all(a < 0) or all(a > 0):
-            teilchen = input[count]
-            if teilchen not in aussenteilchen:
-                aussenteilchen.append(teilchen)
-    if b != []:
-        b = np.array(b)
-        if all(b < 0) or all(b > 0):
-            teilchen = input[count]
-            if teilchen not in aussenteilchen:
-                aussenteilchen.append(teilchen)
-    if c != []:
-        c = np.array(c)
-        if all(c < 0) or all(c > 0):
-            teilchen = input[count]
-            if teilchen not in aussenteilchen:
-                aussenteilchen.append(teilchen)
+    teilchen = input[count]
+    a = np.array(a)
+    if all(a < 0) or all(a > 0):
+        if teilchen not in aussenteilchen:
+            aussenteilchen.append(teilchen)
+    if teilchen in aussenteilchen:
+        if any(a == -1) or any(a == -2):
+            innenseiten += 1
+        if any(a == 1) or any(a == 2):
+            innenseiten += 1
+    b = np.array(b)
+    if all(b < 0) or all(b > 0):
+        if teilchen not in aussenteilchen:
+            aussenteilchen.append(teilchen)
+    if teilchen in aussenteilchen:
+        if any(b == -1) or any(b == -2):
+            innenseiten += 1
+        if any(b == 1) or any(b == 2):
+            innenseiten += 1
+            innenseiten += 1
+    c = np.array(c)
+    if all(c < 0) or all(c > 0):
+        if teilchen not in aussenteilchen:
+            aussenteilchen.append(teilchen)
+    if teilchen in aussenteilchen:
+        if any(c == -1) or any(c == -2):
+            innenseiten += 1
+        if any(c == 1) or any(c == 2):
+            innenseiten += 1
+
     count += 1
 
-total_areab = len(aussenteilchen) * 6
-for i in aussenteilchen:
-    for j in input:
-        if i != j:
-            dist = 0
-            for k, l in enumerate(i):
-                diff = abs(l - j[k])
-                dist += diff
-            if dist == 1:
-                total_areab -= 1
 
-print(total_areab)
+print(innenseiten)
+print(len(aussenteilchen) * 6 - innenseiten)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#
+# total_areab = len(aussenteilchen) * 6
+# for i in aussenteilchen:
+#     for j in input:
+#         if i != j:
+#             dist = 0
+#             for k, l in enumerate(i):
+#                 diff = abs(l - j[k])
+#                 dist += diff
+#             if dist == 1:
+#                 total_areab -= 1
+# print(total_areab)
+
+xs = [i[0] for i in input]
+ys = [i[1] for i in input]
+zs = [i[2] for i in input]
+xsa = [i[0] for i in aussenteilchen]
+ysa = [i[1] for i in aussenteilchen]
+zsa = [i[2] for i in aussenteilchen]
+
+fig = plt.figure()
+ax = fig.add_subplot(projection='3d')
+ax.scatter(xsa, ysa, zsa, s=5, c='r', marker='s')
+ax.scatter(xs, ys, zs, s=600, alpha=0.2, c='k', marker='s')
+ax.set_xlim(0,6)
+ax.set_ylim(0,6)
+plt.show()
 
 # Berechne Abstände in alle Richtungen x ,y, z.
 # Falls min. 1 Abstand inf. ist -> Teilchen ist aussen
@@ -104,3 +155,4 @@ print(total_areab)
 # Too low: 1980
 # Too low: 2509
 # Too low: 2512
+# Wrong: 3248
