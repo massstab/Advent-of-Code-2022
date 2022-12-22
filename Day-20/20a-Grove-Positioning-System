@@ -4,37 +4,35 @@
 """Name:      massstab
    Date:      18.12.22
    Kurs:      Advent of Code
-   Topic:     Grove Positioning System a
+   Topic:     Grove Positioning System a/b
 """
-import numpy as np
 
-with open("data/input_test.txt") as f:
+# This solution is basically from reddit user Red__Pixel. After hours of trying I peeked at this solution.
+
+with open("data/input.txt") as f:
     data = f.read().splitlines()
 
-encrypted = [int(i) for i in data]
+sol = 'a'
 
-print(encrypted)
-instructions = encrypted.copy()
+if sol == 'a':
+    instructions = [int(i) for i in data]
+if sol == 'b':
+    instructions = [int(i) * 811589153 for i in data]
 chase = list(range(len(instructions)))
-
 div = len(instructions)
 
+if sol == 'a':
+    for orig_idx, instr in enumerate(instructions):
+        pop_idx = chase.index(orig_idx)
+        popped = chase.pop(pop_idx)
+        chase.insert((pop_idx + instructions[orig_idx]) % len(chase), orig_idx)
 
+if sol == 'b':
+    for _ in range(10):
+        for orig_idx, instr in enumerate(instructions):
+            pop_idx = chase.index(orig_idx)
+            popped = chase.pop(pop_idx)
+            chase.insert((pop_idx + instructions[orig_idx]) % len(chase), orig_idx)
 
-for orig_idx, instr in enumerate(instructions):
-    shift = instr
-    if shift < 0 and abs(shift) >= chase[orig_idx]:
-        shift -= 1
-    popped = encrypted.pop(chase[orig_idx])
-    encrypted.insert((chase[orig_idx] + shift) % div, popped)
-    tmp = chase.copy()
-    popped_idx = chase.pop(chase.index(orig_idx))
-    chase.insert((tmp[orig_idx] + shift) % div, popped_idx)
-
-    # [0, 1, 4, 2, 3, 5, 6]
-
-    print(encrypted)
-
-
-
-
+start = chase.index(instructions.index(0))
+print(sum(instructions[chase[(start + i) % len(chase)]] for i in [1000, 2000, 3000]))
