@@ -12,22 +12,22 @@
 with open("data/input.txt") as f:
     data = f.read().splitlines()
 
-sol = 'a'
+solution = 'a'
 
-if sol == 'a':
+if solution == 'a':
     instructions = [int(i) for i in data]
-if sol == 'b':
+if solution == 'b':
     instructions = [int(i) * 811589153 for i in data]
 chase = list(range(len(instructions)))
 div = len(instructions)
 
-if sol == 'a':
+if solution == 'a':
     for orig_idx, instr in enumerate(instructions):
         pop_idx = chase.index(orig_idx)
         popped = chase.pop(pop_idx)
         chase.insert((pop_idx + instructions[orig_idx]) % len(chase), orig_idx)
 
-if sol == 'b':
+if solution == 'b':
     for _ in range(10):
         for orig_idx, instr in enumerate(instructions):
             pop_idx = chase.index(orig_idx)
