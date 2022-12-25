@@ -12,7 +12,7 @@
 with open("data/input.txt") as f:
     data = f.read().splitlines()
 
-solution = 'a'
+solution = 'b'
 
 if solution == 'a':
     instructions = [int(i) for i in data]
@@ -21,18 +21,13 @@ if solution == 'b':
 chase = list(range(len(instructions)))
 div = len(instructions)
 
-if solution == 'a':
+for _ in range(10):
     for orig_idx, instr in enumerate(instructions):
         pop_idx = chase.index(orig_idx)
         popped = chase.pop(pop_idx)
         chase.insert((pop_idx + instructions[orig_idx]) % len(chase), orig_idx)
-
-if solution == 'b':
-    for _ in range(10):
-        for orig_idx, instr in enumerate(instructions):
-            pop_idx = chase.index(orig_idx)
-            popped = chase.pop(pop_idx)
-            chase.insert((pop_idx + instructions[orig_idx]) % len(chase), orig_idx)
+    if solution == 'a':
+        break
 
 start = chase.index(instructions.index(0))
 print(sum(instructions[chase[(start + i) % len(chase)]] for i in [1000, 2000, 3000]))

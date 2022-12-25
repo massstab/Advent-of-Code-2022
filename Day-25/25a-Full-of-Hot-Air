@@ -1,0 +1,52 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""Name:      massstab
+   Date:      25.12.22
+   Kurs:      Advent of Code
+   Topic:     Full of Hot Air
+"""
+
+
+def to_number(string):
+    pass
+
+
+def snafu_to_dezimal(snafu_string):
+    snafu_dict = {'=': -2, '-': -1, '0': 0, '1': 1, '2': 2}
+    msd = len(snafu_string)  # most significant digit
+    sumands = []
+    values = list(range(0, msd))
+    for i, d in zip(reversed(values), snafu_string):
+        factor = 5 ** i
+        ten_base = snafu_dict[d] * factor
+        sumands.append(ten_base)
+    return sum(sumands)
+
+
+def dezimal_to_snafu(n):
+    """
+    Idea from reddit user Tipa16384
+    """
+    snafu = ""
+    while n:
+        n, remainder = divmod(n, 5)
+        if remainder in [0, 1, 2]:
+            snafu = str(remainder) + snafu
+        if remainder == 3:
+            n += 1
+            snafu = '=' + snafu
+        if remainder == 4:
+            n += 1
+            snafu = '-' + snafu
+    return snafu
+
+
+if __name__ == '__main__':
+    with open("data/input.txt") as f:
+        data = f.read().splitlines()
+
+    to_sum = []
+    for i in data:
+        to_sum.append(snafu_to_dezimal(i))
+    print(dezimal_to_snafu(sum(to_sum)))
